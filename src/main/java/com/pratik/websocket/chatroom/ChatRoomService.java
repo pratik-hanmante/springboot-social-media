@@ -11,31 +11,41 @@ public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
 
-    public Optional<String> getChatRoomId(
-            String senderId,
-            String recipientId,
-            boolean createNewRoomIfNotExists
-    ) {
-        return chatRoomRepository.findBySenderIdAndRecipientId(senderId,recipientId)
-                .map(ChatRoom::getChatId)
-//                creating new room if doesnt exist
-                .or(() -> {
-                    if (createNewRoomIfNotExists) {
-                        var chatId = createChat(senderId, recipientId);
-                    }
-                    return Optional.empty();
-                });
+ public Optional<String> getChatRoomId(
+         String senderId,
+         String recipientId,
+        boolean createNewRoomIfNotExists
+ ) {
+
+     return chatRoomRepository.findBySenderIdAndRecipientId(senderId,recipientId)
+             .map(ChatRoom::getChatId)
+             .or(() -> {
+                 if (createNewRoomIfNotExists) {
+                    var chatId = createChatId(senderId,recipientId);
+                    return Optional.of(chatId);
+                 }
+                 return Optional.empty();
+             });
+
     }
 
-    private String createChat(String senderId, String recipientId) {
-        var chatId = String.format("%s_%s", senderId, recipientId); // pratik_pratikHanmante
+    private String createChatId(String senderId, String recipientId) {
+     var chatId = String.format("%s_%s", senderId, recipientId);
 
-        ChatRoom senderRecipient = ChatRoom.builder()
-                .chatId(chatId)
-                .build();
-    }
-    ChatRoom senderRecipient = ChatRoom.builder()
-                .chatId(chatId)
-                .build();
+     ChatRoom senderRecipient = ChatRoom.builder()
+             .chatId(chatId)
+             .senderId(senderId)
+             .recipientId(recipientId)
+             .build();
+
+     ChatRoom recipientSender = ChatRoom.builder()
+             .chatId(chatId)
+             .senderId(recipientId)
+             .recipientId(senderId)
+             .build();
+
+     chatRoomRepository.save(senderRecipient);
+     chatRoomRepository.save(recipientSender);
+     return chatId;
     }
 }
